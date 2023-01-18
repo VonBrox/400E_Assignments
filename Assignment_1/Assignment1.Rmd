@@ -60,7 +60,7 @@ When using terminal, paths represent the addresses of the files and directories 
 ```{bash, eval=FALSE}
 #?# Check your current directory's path: 0.5 pt
 
-
+pwd
 
 ```
 
@@ -72,6 +72,7 @@ When using terminal, paths represent the addresses of the files and directories 
 #?# In your home directory create a new directory for assignment 1 (on some systems these are known as "folders") - 1pt
 ## This directory will host the files created throughout this assignment 
 
+mkdir assignment_1
 
 ```
 
@@ -97,6 +98,7 @@ Access your newly created directory
 #?# Type the command you need to use to move to your newly created directory - 0.5 pt 
 ## Tip: look at the *cd* command documentation
 
+cd assignment_1
 
 ```
 
@@ -109,8 +111,11 @@ How would you move back to your home directory (*/home/your_user_name*)?
 
 #?# Using the complete directory path of your home directory: - 0.25 pt
 
+cd /home/lbrockley_bmeg23
+
 #?# Using the "go to parent directory" shortcut - 0.25
 
+cd ..
 
 ```
 
@@ -125,11 +130,16 @@ The sequencing data that we will be using is paired-end. This means that each DN
 #?# Look at the first 3 rows of the dataset - 0.25
 # Tip: look at the *head* command documentation 
 
+head -n 3 input_iPSC_SRA66_subset_1.fastq
+
 #?# Look at the last 7 rows of the dataset - 0.25
 # Tip: look at the *tail* command documentation 
 
+tail -n 7 input_iPSC_SRA66_subset_1.fastq 
+
 #?# Explore the file with the *less* command  - 0.25
 
+less input_iPSC_SRA66_subset_1.fastq
 
 ```
 
@@ -139,11 +149,26 @@ Typically, fastq files would be compressed, typically using `gzip`.
 
 #?# Compress one of the fastq files (from its original location) as a .fastq.gz within your assignment directory using gzip - 0.5
 
+gzip -c input_iPSC_SRA66_subset_1.fastq > /home/lbrockley_bmeg23/assignment_1/input_iPSC_SRA66_subset_1.fastq.gz
 
 #?# Try running `zmore <file>.fastq.gz` on the file you just made. What does this command do? - 0.5
 
+This allows me to view the compressed .gz file in a similar format as I would view an uncompressed file using the 'less' command.
+
 #?# How much space do the compressed and uncompressed fastqs take? - 0.5
 
+Command:
+du input_iPSC_SRA66_subset_1.fastq.gz 
+Output:
+163360	input_iPSC_SRA66_subset_1.fastq.gz
+
+Command:
+du /projects/bmeg/A1/input_iPSC_SRA66_subset_1.fastq
+Output:
+845380	/projects/bmeg/A1/input_iPSC_SRA66_subset_1.fastq
+
+The compressed file takes up 163 360 bytes of storage.
+The uncompressed file takes up 845380 bytes of storage.
 
 ```
 
