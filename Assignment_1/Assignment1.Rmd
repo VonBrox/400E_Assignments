@@ -59,8 +59,9 @@ When using terminal, paths represent the addresses of the files and directories 
 
 ```{bash, eval=FALSE}
 #?# Check your current directory's path: 0.5 pt
-
 pwd
+#Output:
+/home/lbrockley_bmeg23
 
 ```
 
@@ -132,10 +133,32 @@ The sequencing data that we will be using is paired-end. This means that each DN
 
 head -n 3 input_iPSC_SRA66_subset_1.fastq
 
+#output:
+@SRR12694366.1.1000000
+CCACAGCCATGCCTCCAAGGGTCCTTGATCCAAATAGCAGAACAAATCACATAAACTCTCAGGGCCTACTTTAGAAAGGCATGTGACTTGAGTTTCTGTATCGACTGTTCCTCTTGTCCAGAGGCCTTAATTAATCCAGGAATGGCGGCAT
++
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+@SRR12694366.1.10000029
+TTGGAAAGTCTTGCCAGTCTGACGACATTAGCCACAGTAGACTATTGTCAAGATGTGGGCAGACTATGTGTTTGCTAATCATGTCTCTTTACTCCGTCATAATTCCTCAGGGCACAAGATTAATAGATCGGAAGAGCACACGTCTGAACTC
++
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF::FFFFFF:FF,:FFFFFFFFFFFFFFFFF
+@SRR12694366.1.10000035
+GAGCCAGATTCTGCACAAGGGTTGGGTGCCACAGGCTGGCCCAGTGGCATGGCCTGGTAAGCTCCTTAGCCAGGACAGCCAGGCAGGTTGTCATCATCTGCTGTTCCTCCCTCAGCCCTCAGTGTGTATCTGCAGCAGGGACTTCTGTGCA
+
 #?# Look at the last 7 rows of the dataset - 0.25
 # Tip: look at the *tail* command documentation 
 
-tail -n 7 input_iPSC_SRA66_subset_1.fastq 
+tail -n 7 input_iPSC_SRA66_subset_1.fastq
+
+#Output:
+
+TTATAGCATTATCATATATCTGTGCCAATAAGGGCTATAGATTTTTGTTTTAAATAAAAACAAGGGGCCAGGCATAGTAATTCATGCCTGTAATCCCTGTGTTTTGGGAGGCTGAGGCAAGAGAATCACTTGGCCAGGAGTTCAAGACCAG
++
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFF
+@SRR12694366.1.9999998
+CCGAAGATCCTTACCATCTGTGCAACCAAGTGGGTGGGACAGTGGAGGTGGGAGCCTCCACTATTTTGAACCTCAAGTTTCTTGGAAAATTTCTGTCAGACTTAGATGAGATCATTCATGTGAAGTTGATTTGTGAAAGGTCTAGAATGAG
++
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 
 #?# Explore the file with the *less* command  - 0.25
 
@@ -153,22 +176,25 @@ gzip -c input_iPSC_SRA66_subset_1.fastq > /home/lbrockley_bmeg23/assignment_1/in
 
 #?# Try running `zmore <file>.fastq.gz` on the file you just made. What does this command do? - 0.5
 
-This allows me to view the compressed .gz file in a similar format as I would view an uncompressed file using the 'less' command.
+cd /home/lbrockley_bmeg23/assignment_1
+zmore input_iPSC_SRA66_subset_1.fastq.gz
+
+#This allows me to view the compressed .gz file in a similar format as I would view an uncompressed file #using the 'less' command.
 
 #?# How much space do the compressed and uncompressed fastqs take? - 0.5
 
-Command:
+#Retrieving storage space information:
 du input_iPSC_SRA66_subset_1.fastq.gz 
-Output:
+#Output:
 163360	input_iPSC_SRA66_subset_1.fastq.gz
 
-Command:
+#Retrieving storage space information:
 du /projects/bmeg/A1/input_iPSC_SRA66_subset_1.fastq
-Output:
+#Output:
 845380	/projects/bmeg/A1/input_iPSC_SRA66_subset_1.fastq
 
-The compressed file takes up 163 360 bytes of storage.
-The uncompressed file takes up 845380 bytes of storage.
+#The compressed file 1 takes up 163 360 bytes of storage.
+#The uncompressed file 1 takes up 845 380 bytes of storage.
 
 ```
 
@@ -183,12 +209,29 @@ Because this is a very large dataset we will subset it in order to make it more 
 #?# How many lines does the uncompressed fastq file have in total? - 0.25
 #Tip: loop at the *wc* command documentation
 
+cd
+cd /projects/bmeg/A1/
+wc -l input_iPSC_SRA66_subset_1.fastq
+
+#Output:
+10459640 input_iPSC_SRA66_subset_1.fastq
+
+#There are 10459640 lines in the uncompressed fastq file.
+
 
 #?# Select only the id lines (e.g. @SRR12506919.667552 667552 length=151) of the dataset (the ones that start with @ and are followed by the read id) - 0.75 pt
 ## Tip: look at the *grep* command
 
+grep ^@ input_iPSC_SRA66_subset_1.fastq
+
+#Output: All lines beginning with @ character
+
 #?# How many reads are in the file (i.e., how many id lines are in the file)? - 1 pt
 
+grep ^@ input_iPSC_SRA66_subset_1.fastq | wc -l
+#Output:
+2614910
+#There are 2614910 reads in the file.
 
 ```
 
@@ -200,6 +243,7 @@ Because this is a very large dataset we will subset it in order to make it more 
 
 #?# Create a file that contains only the reads id lines (the result of our previous exercise). - 0.5 pt
 
+grep ^@ input_iPSC_SRA66_subset_1.fastq > /home/lbrockley_bmeg23/assignment_1/input_iPSC_SRA66_subset_1_id.txt
 
 ```
 
@@ -213,10 +257,16 @@ There will be times where you will want to save a copy of a dataset or file befo
 #?# Create a copy of the reads ids file - 0.25 pt
 ## Tip: man cp 
 
+cp input_iPSC_SRA66ubset_1_id.txt input_iPSC_SRA66_subset_1_id_copy.txt
+
 #?# Change the name of the backup reads id file - 0.25 pt
 ## Tip: man mv
 
+mv input_iPSC_SRA66_subset_1_id_copy.txt input_iPSC_SRA66_subset_1_id_backup.txt
+
 #?# Delete the copy of the reads id file - 0.25 pt
+
+rm input_iPSC_SRA66_subset_1_id_backup.txt
 
 ```
 
@@ -231,13 +281,16 @@ Conda is a package and environment manager (*https://docs.conda.io/en/latest/*).
 
 ## 1. Move to your home directory 
 
+cd
+
 #?# 2. Use the wget command to get the following file: https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
 
+wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
 
 ## The file extension .sh pertains to a bash script, the script you just downloaded contains all the instructions needed to install Conda to your home directory
 #?# 3. Run the Anaconda3-2021.11-Linux-x86_64.sh bash script. IMPORTANT: say yes to all the steps when prompted! 
 
-
+bash Anaconda3-2021.11-Linux-x86_64.sh
 
 ## 4. To finalize the installation you need to log out your current session and log in back to the server
 
