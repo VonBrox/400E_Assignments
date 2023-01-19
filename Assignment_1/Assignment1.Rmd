@@ -294,8 +294,6 @@ bash Anaconda3-2021.11-Linux-x86_64.sh
 
 ## 4. To finalize the installation you need to log out your current session and log in back to the server
 
-
-
 ```
 
 
@@ -351,12 +349,26 @@ We will use fastQC to do a quick inspection of the data quality. Once it has run
 
 #?# Run fastQC on the fastq files: - 1pt
 
+#Outputs fastqc for both fastq files into the assignment_1 folder.
+#Note that I made a shortcut to the folder containing the fastq files called cur_project_dir
+  
+fastqc -o /home/lbrockley_bmeg23/assignment_1/  /home/lbrockley_bmeg23/cur_project_dir/input_iPSC_SRA66_subset_1.fastq /home/lbrockley_bmeg23/cur_project_dir/input_iPSC_SRA66_subset_2.fastq
+ 
+  
 ## In order to open the html files on your web browser you will need to download the files to your computer
 ## Ubuntu/Linux and Mac users: look at the *scp* command
 ## Windows users, this varies by what program you are using to connect (e.g. putty, winSCP, MobaXTerm). E.g. see: https://stackoverflow.com/questions/6217055/how-can-i-copy-a-file-from-a-remote-server-to-using-putty-in-windows
 
+scp lbrockley_bmeg23@orca1.bcgsc.ca:/home/lbrockley_bmeg23/assignment_1/input_iPSC_SRA66_subset_1_fastqc.html .
+ 
 #?# What can you say about the data quality? Are there any areas of concern? If so, what could explain what you are seeing? Does read 1 or read 2 have better sequencing quality? Is this expected? - 4 pt 
 # ---
+
+The data quality appears to be quite good in both fastqs.
+Both reports have given a green checkmark of approval to all sections of the summary except for "per sequence GC content", which has an orange warning in both reports, indicating that >15% of reads deviated from the expected normal distribution of GC content.
+Both samples have a higher GC content per sequence than predicted by a normal distribution (the peaks are higher and shifted to the right).
+The somewhat aberrant shapes of the peaks may be explained by contamination, and the slight shift to higher GC content may be explained by systematic bias in the study design.
+Based on the per sequence quality graph, read 1 has better sequencing quality. This is expected; read 2 quality is often lower than read 1 quality.
 
 ```
   
