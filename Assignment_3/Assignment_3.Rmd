@@ -1,7 +1,7 @@
 ---
 title: "Assignment 3: Mappability"
 output:
-  html_document:
+  github_document:
     toc: true
     toc_depth: 4
     toc_float: true
@@ -48,11 +48,16 @@ As always, before we start we will make sure to have all the programs we need to
 
 #?# Add trimmomatic to your conda environment created on A1 - 0.5 pt
 
+conda install -c bioconda trimmomatic
 
-# In some cases adding a new tool to your conda environmnet will upgrade or downgrade other dependencies that were already in your environment. 
+# In some cases adding a new tool to your conda environment will upgrade or downgrade other dependencies that were already in your environment. 
 #?# What could happen to your previous analysis code if you modify its dependencies in the conda environment now? - 0.5 pt
 
+Modifying other dependencies in the environment could make the previous code work differently or not work at all. An updated dependency might require different code syntax or formatting, or eliminate/replace some functions. This could make it difficult to replicate the prior analysis.
+
 #?# How could you prevent this from happening? 0.5 pt
+
+If you anticipate installing a new tool that will change other dependencies, you could make a new conda environment and re-install all the tools that you need, including the new one. This would ensure that there is a backup of the previous state of all the dependencies that you can use to replicate your results.
 
 ```
 
@@ -71,16 +76,23 @@ As you reviewed in class, the sequence length affects the chances of finding uni
 #?# Use trimmomatic SE to crop the file down to 25 bp in length, type the command you use below - 1 pt
 ## Note: Remember to gzip all your files! Look into the trimmomatic documentation for how to specify to compress your output
 
+After copying the file to my assignment 3 directory, I used:
+
+trimmomatic SE H3K27me3_iPSC_SRA60_subset_1.fastq.gz H3K27me3_iPSC_SRA60_subset_1.25bp.fastq.gz CROP:25
 
 #?# Use bowtie2 to map the _25bp_ read file you just created to the reference genome, type the command you use below: - 0.5 pt
 
+bowtie2 -x /projects/bmeg/indexes/hg38/hg38_bowtie2_index H3K27me3_iPSC_SRA60_subset_1.25bp.fastq.gz -S H3K27me3_iPSC_SRA60_subset_1.25bp.mapped.sam
 
 #?# Use sambamba view to get the number of uniquely mapped reads of the alignment output you got above,type the command you use below: - 0.5 pt
 ## NOTE: Remember to use the following flag:
 ## -F "[XS] == null and not unmapped and not duplicate"
 ## Tip: Check the sambamba documentation for options that will allow you to use the sam file as an input and automatically count the number of reads.
 
+sambamba view -c -S -F "[XS] == null and not unmapped and not duplicate" H3K27me3_iPSC_SRA60_subset_1.25bp.mapped.sam
 
+Output:
+1325510
 
 ```
 
@@ -97,6 +109,21 @@ You realize that if you want to consider many different read lengths, copying an
 
 ### Create a mini pipeline that uses sambamba view to get the number of uniquely mapped reads for the files above, plus the 25bp length file you created for the previous question.
 #?# Type the code of your mini pipeline below: - 3 pt
+
+set -e # this makes the whole script exit on any error.
+touch unique_reads.txt #Makes file to contain unique reads, unless file exists
+sample=$1 #sample is the current filename in the taskfile
+extension=$2 #.bam or .sam extension
+length=$3 #Length of reads in file
+path=$4 #path to the sample
+#
+echo -n $length", " >> unique_reads.txt #Output bp length of reads from filename
+if [[ $extension == ".bam" ]]
+  then sambamba view -c -F "[XS] == null and not unmapped and not duplicate" $path$sample >> unique_reads.txt
+elif [[ $extension == ".sam" ]]
+  then sambamba view -S -c -F "[XS] == null and not unmapped and not duplicate" $path$sample >> unique_reads.txt
+fi
+
 ## You do not need to build in robustness to failure here since only one command is run with a single numerical output (so it would be hard to miss a failed run). 
 ## Have the pipeline also state the read length being considered before displaying the number of uniquely mapping reads (seperated by a comma).
 ## Have the pipeline save the results to a txt file.
@@ -108,10 +135,15 @@ You realize that if you want to consider many different read lengths, copying an
 ## <your_taskfile> with a taskfile that includes the tasks you want to perform 
 ./runTheseJobsSerially.sh <your_mini_pipeline> <your_taskfile>
 
-#?# Type the substituted line you used below: - 0.5 pt 
+#?# Type the substituted line you used below: - 0.5 pt
+./runTheseJobsSerially.sh ./get_unique_reads.sh taskfile.txt 
 
 #?# Type the content of your taskfile below: - 0.5 pt 
-
+H3K27me3_iPSC_SRA60_subset_1_LEN_150_mapped.bam	.bam	150	/projects/bmeg/A3/
+H3K27me3_iPSC_SRA60_subset_1_LEN_100_mapped.bam	.bam	100	/projects/bmeg/A3/
+H3K27me3_iPSC_SRA60_subset_1_LEN_75_mapped.bam	.bam	75	/projects/bmeg/A3/
+H3K27me3_iPSC_SRA60_subset_1_LEN_50_mapped.bam	.bam	50	/projects/bmeg/A3/
+H3K27me3_iPSC_SRA60_subset_1.25bp.mapped.sam	.sam	25	
 
 ```
 
@@ -120,31 +152,54 @@ Now that you have the number of uniquely mapped reads for the different reads si
 ```{r}
 ## First, we read our results file into a dataframe. Substitute "results.txt" with the name of your file.
 #?# Substitute the sequence lengths with their respective number of uniquely mapped reads, that you got from sambamba view: - 0.5 pt
-length_mapped_reads.df <- read.csv("results.txt",header=FALSE)
+length_mapped_reads.df <- read.csv("/Users/liambrockley/Documents/UBC 2023/BMEG 591E/Assignment 3/unique_reads.txt",header=FALSE)
 
 ## Use the names function to give your dataframe column headers
 #?# Fill in the right side of the following line: - 0.5 pt
-names(length_mapped_reads.df) <- 
+names(length_mapped_reads.df) <- list("read_length_bp","unique_reads")
 
 
 ## If you don't have it already, install the "ggplot2" package on your Rstudio 
 ## Go to packages on the bottom left part of the screen --> install --> type: ggplot2
 ## Accept to install the required dependencies
-                    
+    
 #?# Create a scatterplot using ggplot2 - 2 pt
 ## Use the reads_length for the x axis, uniquely_mapped_reads for the y axis.
 
+sp<-ggplot(length_mapped_reads.df, aes(x=read_length_bp, y=unique_reads)) + geom_point() + xlim(0,175) +  geom_smooth(method=lm, fullrange=TRUE) + geom_vline(xintercept=15)
+
+sp
 
 ## Tips:
 ## You can look for tutorials on the internet, or use ggplot2's help to learn how to do this. 
 ## To search for help on a function, use the ? command. For instance: 
 ?geom_point
 
-
 #?# How many uniquely mapping reads do you think you would get if you trimmed the reads down to 15 bp and aligned them single ended? Why? - 2 pt
+
+To find the most probable y value for x=15, I will use a linear regression line and obtain its formula:
+
+m <- lm(unique_reads~read_length_bp, length_mapped_reads.df)
+summary(m)
+
+The summary tells me that the y intercept lies at 1297819.2, and the slope of the line is 1933.5.
+By the equation:
+y = (1933.5)x + 1297819.2
+
+If I substitute 15 for x, the result for y is 1326821.7
+The average number of uniquely mapping reads I would expect find for 15 bp reads is 1326821.7. However, as seen on the linear regression graph,
+the 95% confidence interval for y values at x=15 looks like it ranges from about 1375000 to about 1275000. I would expect the number
+of reads to fall somewhere in this range 95% of the time.
 
 #?# Approximately how many more perfect matches to the genome would the average read of length 14 have compared to the average read of length 15? (You can assume that the genome is comprised of completely random sequence for the purpose of this question). - 1 pt
 
+Using the linear regression line equation, we can solve for the difference between the number of uniquely mapping reads for 14 and 15 bp reads:
+  
+d = ((1933.5)(15) + 1297819.2) - ((1933.5)(14) + 1297819.2)
+d = (1933.5)(15) - (1933.5)(14)
+d = 1933.5
+
+There would be approximately 1933.5 more uniquely mapping reads for reads of length 15 than for reads of length 14.
 
 ```
 
@@ -165,20 +220,32 @@ Now that you have shown that the longest read length yields the highest number o
 
 #?# Perform a paired-end (PE) alignment to the genome, type the command you used below: - 1 pt
 
+bowtie2 -x /projects/bmeg/indexes/hg38/hg38_bowtie2_index -1 /projects/bmeg/A3/H3K27me3_iPSC_SRA60_subset_1_LEN_25.fastq.gz -2 /projects/bmeg/A3/H3K27me3_iPSC_SRA60_subset_2_LEN_25.fastq.gz -S H3K27me3_iPSC_SRA60_LEN_25_paired.sam
+
+
 #?# Do a single-end (SE) alignment to the genome of the subset_1 file, type the command you used below: - 1 pt
 
+bowtie2 -x /projects/bmeg/indexes/hg38/hg38_bowtie2_index -U /projects/bmeg/A3/H3K27me3_iPSC_SRA60_subset_1_LEN_25.fastq.gz -S H3K27me3_iPSC_SRA60_subset_1_LEN_25_unpaired.sam
 
 #?# Convert the PE sam file to bam format, type the command you used below: - 0.5 pt
 
+samtools view -h -b -o H3K27me3_iPSC_SRA60_LEN_25_paired.bam H3K27me3_iPSC_SRA60_LEN_25_paired.sam
+
 #?# Convert the SE sam file to bam format, type the command you used below: - 0.5 pt
+
+samtools view -h -b -o H3K27me3_iPSC_SRA60_subset_1_LEN_25_unpaired.bam H3K27me3_iPSC_SRA60_subset_1_LEN_25_unpaired.sam
 
 ## Before moving on: remove the PE and SE sam alignment files!
 
 #?# Use sambamba view to get the number of uniquely mapped reads for the PE alignment, type the command you used below: - 0.5 pt 
 
+sambamba view -c -F "[XS] == null and not unmapped and not duplicate" H3K27me3_iPSC_SRA60_LEN_25_paired.bam
+#Output: 2686235
+
 #?# Use sambamba view to get the number of uniquely mapped reads for the SE alignment, type the command you used below: - 0.5 pt 
 
-
+sambamba view -c -F "[XS] == null and not unmapped and not duplicate" H3K27me3_iPSC_SRA60_subset_1_LEN_25_unpaired.bam
+#Output: 1325510
 ```
 
 Your supervisor liked so much the graphical representation of your data, that he asks you to do a barplot for the SE versus PE alignment comparison.**On your local computer:**
@@ -187,25 +254,28 @@ Your supervisor liked so much the graphical representation of your data, that he
 
 ## First, we create a dataframe with two columns, one (run_type) for the different run types and another (uniquely_mapped_reads for the number of uniquely mapped reads.
 #?# Substitute the SE and PE with their respective number of uniquely mapped reads that you got from sambamba view: - 1 pt
-sequence_run.df <- data.frame(run_type=c("Single End", "Paired End"),
-                              uniquely_mapped_reads=c(SE,PE))
-
-
-
+sequence_run.df <- data.frame(run_type=c("Single End", "Paired End"),uniquely_mapped_reads=c(1325510,2686235))
 
 #?# Using ggplot, create a barplot that shows the different number of uniquely mapped reads between the two run types: - 2 pt
 ## Use the run_type in the x-axis
 ## Use the uniquely_mapped_reads in the y-axis
 
+bp<-ggplot(data=sequence_run.df, aes(x=run_type, y=uniquely_mapped_reads)) + geom_bar(stat="identity")
 
+bp
 
 #?# Does the run type makes a difference? If there is, is it large? - 1 pt
 
+Yes, the run type does make a substantial difference in the number of uniquely mapped reads. The bar chart makes it apparent that the paired end run type had approximately 2x the number of uniquely mapped reads as the single end run type.
+
 #?# In your own words explain the difference between SE and PE read alignment. - 1 pt
+
+Single-end read alignment only maps reads that were sequenced in the 5' to 3' direction. Paired-end read alignment matches reads that were sequenced in the 3' to 5' direction with reads mapped in the 5'to 3' direction. This results in longer mapped reads and less ambiguous mapping.
 
 #?# Given that the 50 bp reads (from last graph) contain the same number of bases as two 25 bp reads (25 bp PE; 25+25=50), why are the number of uniquely mapping reads different between these two? Which has more? Why do you think this is? - 3 pts
 
-  
+The paired-end 25 bp reads mapped uniquely 2686235 times, nearly twice as many times as the single-end 50 bp reads, which uniquely mapped 1401280 times. The single-end 50 bp reads may be twice as long, but they provide less information overall, since only the beginning of each strand is sequenced. Since each pair of reads in the 25 bp paired-end sequencing occur on opposite ends of the strands, they indirectly give the bowtie2 aligner program information about the DNA between them. This makes it easier for the aligner to map them unambiguously. 
+
 ```
 
 ## Assignment submission
@@ -218,9 +288,9 @@ Successful knitting to github_document - 2 pts
 
 Following completion of your assignment, please fill out this section with the authors and their contributions to the assignment.  If you worked alone, only the author (e.g. your name and student ID) should be included.
 
-Authors: Name1 (studentID1) and Name2 (studentID2)
+Authors: Liam Brockley (26182865)
 
-Contributions: (example) N1 and N2 worked together on the same computer to complete the assignment. N1 typed for the first half and N2 typed for the second half. 
+Contributions: (example) Liam Brockley worked on this assignment alone
 
 
 

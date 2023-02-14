@@ -71,7 +71,7 @@ As you might have seen on the overview we will be using lots of new tools today.
 
 #?# Add sambamba to the conda environment created in assignment 1 - 0.5 pt
 
-
+conda install -c bioconda sambamba
 
 ## Note: to complete this assignment, it is expected that your conda environment already has installed: fastqc, bowtie2 and samtools 
 
@@ -94,11 +94,23 @@ Similarly to the last assignment, we need to make sure that the data has a good 
 
 #?# Type below the command that you used to perform the fastqc analysis on the paired-end iPSC input files: - 0.5 pt
 
+fastqc -o /home/lbrockley_bmeg23/assignment_2/  /projects/bmeg/A2/input_iPSC_SRA66_subset_1.fastq.gz /projects/bmeg/A2/input_iPSC_SRA66_subset_2.fastq.gz
+
 ## Copy the html output file to your computer, open it and write below what can you tell about the data quality of these files.
 ## You can reference fastqc documentation if in doubt.
 
+scp lbrockley_bmeg23@orca1.bcgsc.ca:/home/lbrockley_bmeg23/assignment_2/input_iPSC_SRA66_subset_1_fastqc.html ./Desktop
+
 #?# Are there any differences between the files for read 1 and read 2? Describe what you see below: - 1.5 pt
 ## -
+
+These are the same files I analyzed for assignment 1, so my observations are much the same.
+Read 1 has superior sequencing quality according to the per sequence quality graph. The higher quality of the first read is a common occurrence and is to be expected.
+The quality of data seems relatively high for both fastqs.
+Aside from the "per sequence GC content", all sections of the QC report have passed qc. The "per sequence GC content", which has been marked by an orange warning, shows that more than 15% of reads did not have GC content that conformed to the expected normal distribution.
+The GC content for both samples is larger than would be predicted by normal distribution, as shown by the rightward shift, aberrant shape, and heightened peak of the curve.
+Contamination may explain the irregular forms of the peaks, while systematic bias in thedesign of the study could explicate the notable shift to the right and loftier peaks.
+
 ## -
 
 
@@ -109,7 +121,7 @@ Similarly to the last assignment, we need to make sure that the data has a good 
 
 ### b. Mapping to the reference genome
 
-**IMPORTANT**: This step can take up to ~30mins to run, please be mindful of the resources in the server (use htop) 
+**IMPORTANT**: This step can take up to ~30 mins to run, please be mindful of the resources in the server (use htop) 
 
 
 ```{bash, eval=FALSE}
@@ -117,6 +129,7 @@ Similarly to the last assignment, we need to make sure that the data has a good 
 #?# Perform a paired-end alignment of the iPSC input fastq sequences to the human genome using bowtie2 - 1.5 pt
 ## Use the previously created index located in: /projects/bmeg/indexes/hg38/hg38_bowtie2_index 
 
+bowtie2 -x /projects/bmeg/indexes/hg38/hg38_bowtie2_index -1 /projects/bmeg/A2/input_iPSC_SRA66_subset_1.fastq.gz -2 /projects/bmeg/A2/input_iPSC_SRA66_subset_2.fastq.gz -S assignment_2/assignment_2_alignment.sam
 
 
 
@@ -132,8 +145,11 @@ Next we must convert the sam files made by bowtie2 to bam files, which are much 
 #?# Using *samtools view*, convert the sam file containing the result of the alignment of the iPSC input files to the reference genome (last step output) to bam format - 1.5 pt
 ## You will need the "-h" flag
 
+samtools view -h -b -o assignment_2/assignment_2_alignment.bam assignment_2/assignment_2_alignment.sam
+
 #?# What does the -h flag do? Why do you need to include it? - 2 pt
 
+The -h option tells samtools to include the header in the output. I need to include it so that the .bam output will have headers, which will make it easier to read.
 
 ```
 
@@ -149,23 +165,39 @@ samtools view <step_c_output>.bam | cut -f1,3,4 | head -5
 
 #?# Use the comment character (# at the beginning of the line) to include the output of the command above (one per line): - 0.5pt
 
+samtools view assignment_2/assignment_2_alignment.bam | cut -f1,3,4 | head -5
 
+#SRR12694366.1000000     chr3    46631700
+#SRR12694366.1000000     chr3    46631857
+#SRR12694366.10000029    chr3    77719001
+#SRR12694366.10000029    chr3    77718984
+#SRR12694366.10000035    chr3    40015576
 
 ## Using *sambamba sort*, sort the bam file that you created on the last step
 ## sambamba sort default will sort the file and build an index that will allow us to look at the reads that mapped to a specific positions in the genome
 #?# Type the command you use below: - 1 pt
 
+sambamba sort assignment_2/assignment_2_alignment.bam 
 
 ## View the read ID, chromosome, and genomic position for the first 5 reads, as before, but this time for the sorted bam file you just made.
 samtools view step_d_output.bam | cut -f1,3,4 | head -5
 
+samtools view assignment_2/assignment_2_alignment.sorted.bam | cut -f1,3,4 | head -5
+
 #?# Use the comment character (# at the beginning of the line) to include the output of the command above (one per line): - 0.5pt
 
-
+#SRR12694366.20112669	chr1	33051659
+#SRR12694366.20112669	chr1	33051692
+#SRR12694366.10602351	chr1	34566271
+#SRR12694366.10602351	chr1	34566271
+#SRR12694366.4500457	chr1	42787342
 
 
 #?# What changed between the two files? Describe what is sambamba sort doing. - 1 pt
-## If needed, you can inspect more of each bam file (e.g. using `more`, or by increasing the -n parameter for `head` in the above). Jjust don't bother to include more than 5 lines for each in your submission.
+
+The first file started with reads from chromosome 3 with the position numbers arranged in a random order, while the second file starts with  reads from chromosome 1 and has an ascending order of chromosome position numbers. The sambamba sort command has sorted the reads by chromosome number and position.
+
+## If needed, you can inspect more of each bam file (e.g. using `more`, or by increasing the -n parameter for `head` in the above). Just don't bother to include more than 5 lines for each in your submission.
 
 
 ```
@@ -182,9 +214,21 @@ Next, we want to create a version of the BAM file that contains only uniquely ma
 ## *  -F "[XS] == null and not unmapped and not duplicate"  *
 ## Important: Remember to add the header (-h flag) and to specify the output file format (-f flag) as bam
 
+sambamba view -F "[XS] == null and not unmapped and not duplicate" -h -f bam -o assignment_2/assignment_2_alignment.sorted.filtered.bam assignment_2/assignment_2_alignment.sorted.bam 
 
 #?# How many reads were there before filtering for uniquely mapped reads? How many are there now?  2 pt
 
+Command:
+samtools view assignment_2/assignment_2_alignment.sorted.bam | cut -f1,3,4 | wc -l
+Output:
+4444490
+There were 4444490 reads before filtering.
+
+Command:
+samtools view assignment_2/assignment_2_alignment.sorted.filtered.bam | cut -f1,3,4 | wc -l
+Output:
+3828495
+There were 3828495 reads after filtering
 
 ```
 
@@ -197,6 +241,8 @@ The next step in the process would be calling peaks, but we need both input and 
 We have gone through all these steps for this first file, the input iPSC file. Now we want to make a pipeline that could be used for all four files where we have abstracted away the sample IDs, and instead have code that will work on any given sample name.
 
 In this section, you will need to edit files on the command line. There are several ways in which you can do this. The simplest text editor is `pico`, with `emacs` being more intermediate, and `vim` being powerful, but difficult to learn. You can find tutorials for any of these using google. It would be best for you to learn one of these, rather than constantly moving files back and forth to/from your computer and the server.
+
+[Note: the newest basic one for mac is called nano, which has replaced pico]
 
 ### a. Make a task list
 
@@ -222,7 +268,22 @@ Now run the following command, where you should replace <taskfile> with the name
 ./runTheseJobsSerially.sh echo <taskfile>
 
 #?# what happened? Enter your answer below - 1 pt
+
+I found that I first had to change the permission of the runTheseJobsSerially.sh file with the command:
+chmod u+x runTheseJobsSerially.sh
+
+I was then able to run the command:
+./runTheseJobsSerially.sh echo assignment_2/joblist.txt
+
+The output was as follows:
+iPSC_input input_iPSC_SRA66_subset_1.fastq.gz input_iPSC_SRA66_subset_2.fastq.gz
+iPSC_H3K27me3 H3K27me3_iPSC_SRA60_subset_1.fastq.gz H3K27me3_iPSC_SRA60_subset_2.fastq.gz
+
+The program ./runTheseJobsSerially.sh printed each tab-delimited element in the file assignment_2/joblist.txt to standard output with the echo command.
+
 ## --
+
+
 
 ```
 
@@ -248,6 +309,8 @@ then
         
         #enter commands to run fastqc here
         
+        fastqc -o /home/lbrockley_bmeg23/assignment_2/  /projects/bmeg/A2/$fq1 /projects/bmeg/A2/$fq2
+        
         touch $logDir/$sample.fastqc.done #create the file that we were looking for at the beginning of this if statement so that this same code is not run next time
 else # $logDir/$sample.fastqc.done was not missing
         echo Already performed fastqc of $sample
@@ -264,15 +327,42 @@ Now run the following:
 ```{bash, eval=FALSE}
 
 ## Run this with <taskfile> replaced with the name of your task file.
-./runTheseJobsSerially.sh ./fastqToFilteredBam.sh <taskfile>
+./runTheseJobsSerially.sh ./fastqToFilteredBam.sh joblist.txt
 
 #?# What happened? Enter your answer below - 1 pt
+
+After I changed the file permission:
+chmod u+x fastqToFilteredBam.sh
+I was able to run the command:
+./runTheseJobsSerially.sh ./fastqToFilteredBam.sh joblist.txt
+
+This ran paired-end fastQC on the files in /projects/bmeg/A2/ listed in joblist.txt,
+which included input_iPSC_SRA66_subset_1.fastq.gz and input_iPSC_SRA66_subset_2.fastq.gz ,
+as well as H3K27me3_iPSC_SRA60_subset_1.fastq.gz  and H3K27me3_iPSC_SRA60_subset_2.fastq.gz.
+
+The readout was "Starting analysis of [filename]" with an updating progress report.
+fastqc.zip and fastqc.html files were produced for each of the files listed above. A MyLogDirectory was created, containing .done files for both the input files and the H3K27me3 files, indicating that the process ran to completion. 
+
 ## --
 
 #?# Now run that same command again. What happened this time? Why? Answer below.  - 2 pts
+
+After running the command a second timeI got the following output:
+running pipeline for iPSC_input
+Already performed fastqc of iPSC_input
+running pipeline for iPSC_H3K27me3
+Already performed fastqc of iPSC_H3K27me3
+
+This is because the MyLogDirectory contains a record of the fastqc having already been completed for iPSC_input and 
+iPSC_H3K27me3, and the program will end instead of repeating the analysis on the same samples.
+
 ## --
 
 #?# What can you do to make it run the same way as it did the first time? Answer below with the command(s) that would make it run the same way as the first time - 2 pts
+
+rm MyLogDirectory/iPSC_H3K27me3.fastqc.done MyLogDirectory/iPSC_input.fastqc.done
+./runTheseJobsSerially.sh ./fastqToFilteredBam.sh joblist.txt
+
 ## --
 
 ```
@@ -299,8 +389,76 @@ When you are done, enter the code for your pipeline in the space provided below 
 
 
 #?# PLACE THE CONTENTS OF YOUR SCRIPT BELOW
-
-
+#!/bin/bash
+set -e # this makes the whole script exit on any error.
+sample=$1
+fq1=$2
+fq2=$3
+logDir=MyLogDirectory # this is where all the files to keep track of progress will go.
+mkdir -p MyLogDirectory # make the directory where log files will go, if it doesn't exist already
+echo running pipeline for $sample
+#
+#Running fastqc on samples
+#
+if [ ! -e $logDir/$sample.fastqc.done ] #run this code only if record of fastqc is missing
+then
+        echo Performing fastqc of sample $sample with the following fastqs:
+        ls /projects/bmeg/A2/$fq1 /projects/bmeg/A2/$fq2
+        fastqc -o /home/lbrockley_bmeg23/assignment_2/ /projects/bmeg/A2/$fq1 /projects/bmeg/A2/$fq2
+        touch $logDir/$sample.fastqc.done #create record to prevent repeating process on same file
+else # $logDir/$sample.fastqc.done was not missing
+        echo Already performed fastqc of $sample
+fi
+#
+#Alignment to reference genome with bowtie2
+#
+if [ ! -e $logDir/$sample.alignment.done ] #run this code only if record of alignment is missing
+then
+        echo Performing bowtie2 alignment of sample $sample with the following fastqs:
+        ls /projects/bmeg/A2/$fq1 /projects/bmeg/A2/$fq2
+        bowtie2 -x /projects/bmeg/indexes/hg38/hg38_bowtie2_index -1 /projects/bmeg/A2/$fq1 -2 /projects/bmeg/A2/$fq2 -S $sample.alignment.sam
+        touch $logDir/$sample.alignment.done #create record to prevent repeating process on same file
+else # $logDir record was not missing
+        echo Already performed bowtie2 alignment of $sample
+fi
+#
+#convert from .sam to .bam with samtools
+#
+if [ ! -e $logDir/$sample.sam_to_bam.done ] #run this code only if record of conversion is missing
+then
+        echo Performing conversion of sample $sample from .sam to .bam with the following .sam file:
+        ls $sample.alignment.sam
+        samtools view -h -b -o $sample.alignment.bam $sample.alignment.sam
+        touch $logDir/$sample.sam_to_bam.done #create record to prevent repeating process on same file
+else # $logDir record was not missing
+        echo Already performed conversion of .sam to .bam for $sample
+fi
+#
+#Use sambamba to sort the .bam file
+#
+if [ ! -e $logDir/$sample.sambamba_sort.done ] #run this code only if record is missing
+then
+        echo Sorting $sample .bam file for the following:
+        ls $sample.alignment.bam
+        sambamba sort $sample.alignment.bam
+        touch $logDir/$sample.sambamba_sort.done #create record to prevent repeating process on same file
+else # $logDir record was not missing
+        echo Already performed sambamba sort for $sample
+fi
+#
+#Use sambamba to keep only uniquely mapped reads
+#
+if [ ! -e $logDir/$sample.sambamba_unique_reads_filter.done ] #run this code only if record is missing
+then
+        echo Filtering for unique reads in $sample in the following file:
+        ls $sample.alignment.bam
+        sambamba view -F "[XS] == null and not unmapped and not duplicate" -h -f bam -o $sample.alignment.sorted.filtered.bam $sample.alignment.sorted.bam 
+        touch $logDir/$sample.sambamba_unique_reads_filter.done #create record to prevent repeating process on same file
+else # $logDir record was not missing
+        echo Already filtered unique reads for $sample
+fi
+#
+echo finished pipeline for $sample
 ```
 
 
@@ -308,8 +466,7 @@ When you are done, enter the code for your pipeline in the space provided below 
 
 Following completion of your assignment, please fill out this section with the authors and their contributions to the assignment.  If you worked alone, only the author (e.g. your name and student ID) should be included.
 
-Authors: Name1 (studentID1) and Name2 (studentID2)
+Authors: Liam Brockley 26182865
 
-Contributions: (example) N1 and N2 worked together on the same computer to complete the assignment. N1 typed for the first half and N2 typed for the second half. 
-
+Contributions: Liam Brockley worked on this project alone.
 
