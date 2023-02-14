@@ -59,8 +59,9 @@ When using terminal, paths represent the addresses of the files and directories 
 
 ```{bash, eval=FALSE}
 #?# Check your current directory's path: 0.5 pt
-
-
+pwd
+#Output:
+/home/lbrockley_bmeg23
 
 ```
 
@@ -72,6 +73,7 @@ When using terminal, paths represent the addresses of the files and directories 
 #?# In your home directory create a new directory for assignment 1 (on some systems these are known as "folders") - 1pt
 ## This directory will host the files created throughout this assignment 
 
+mkdir assignment_1
 
 ```
 
@@ -97,6 +99,7 @@ Access your newly created directory
 #?# Type the command you need to use to move to your newly created directory - 0.5 pt 
 ## Tip: look at the *cd* command documentation
 
+cd assignment_1
 
 ```
 
@@ -109,8 +112,11 @@ How would you move back to your home directory (*/home/your_user_name*)?
 
 #?# Using the complete directory path of your home directory: - 0.25 pt
 
+cd /home/lbrockley_bmeg23
+
 #?# Using the "go to parent directory" shortcut - 0.25
 
+cd ..
 
 ```
 
@@ -125,11 +131,38 @@ The sequencing data that we will be using is paired-end. This means that each DN
 #?# Look at the first 3 rows of the dataset - 0.25
 # Tip: look at the *head* command documentation 
 
+head -n 3 input_iPSC_SRA66_subset_1.fastq
+
+#output:
+@SRR12694366.1.1000000
+CCACAGCCATGCCTCCAAGGGTCCTTGATCCAAATAGCAGAACAAATCACATAAACTCTCAGGGCCTACTTTAGAAAGGCATGTGACTTGAGTTTCTGTATCGACTGTTCCTCTTGTCCAGAGGCCTTAATTAATCCAGGAATGGCGGCAT
++
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+@SRR12694366.1.10000029
+TTGGAAAGTCTTGCCAGTCTGACGACATTAGCCACAGTAGACTATTGTCAAGATGTGGGCAGACTATGTGTTTGCTAATCATGTCTCTTTACTCCGTCATAATTCCTCAGGGCACAAGATTAATAGATCGGAAGAGCACACGTCTGAACTC
++
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF::FFFFFF:FF,:FFFFFFFFFFFFFFFFF
+@SRR12694366.1.10000035
+GAGCCAGATTCTGCACAAGGGTTGGGTGCCACAGGCTGGCCCAGTGGCATGGCCTGGTAAGCTCCTTAGCCAGGACAGCCAGGCAGGTTGTCATCATCTGCTGTTCCTCCCTCAGCCCTCAGTGTGTATCTGCAGCAGGGACTTCTGTGCA
+
 #?# Look at the last 7 rows of the dataset - 0.25
 # Tip: look at the *tail* command documentation 
 
+tail -n 7 input_iPSC_SRA66_subset_1.fastq
+
+#Output:
+
+TTATAGCATTATCATATATCTGTGCCAATAAGGGCTATAGATTTTTGTTTTAAATAAAAACAAGGGGCCAGGCATAGTAATTCATGCCTGTAATCCCTGTGTTTTGGGAGGCTGAGGCAAGAGAATCACTTGGCCAGGAGTTCAAGACCAG
++
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFF
+@SRR12694366.1.9999998
+CCGAAGATCCTTACCATCTGTGCAACCAAGTGGGTGGGACAGTGGAGGTGGGAGCCTCCACTATTTTGAACCTCAAGTTTCTTGGAAAATTTCTGTCAGACTTAGATGAGATCATTCATGTGAAGTTGATTTGTGAAAGGTCTAGAATGAG
++
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+
 #?# Explore the file with the *less* command  - 0.25
 
+less input_iPSC_SRA66_subset_1.fastq
 
 ```
 
@@ -139,11 +172,29 @@ Typically, fastq files would be compressed, typically using `gzip`.
 
 #?# Compress one of the fastq files (from its original location) as a .fastq.gz within your assignment directory using gzip - 0.5
 
+gzip -c input_iPSC_SRA66_subset_1.fastq > /home/lbrockley_bmeg23/assignment_1/input_iPSC_SRA66_subset_1.fastq.gz
 
 #?# Try running `zmore <file>.fastq.gz` on the file you just made. What does this command do? - 0.5
 
+cd /home/lbrockley_bmeg23/assignment_1
+zmore input_iPSC_SRA66_subset_1.fastq.gz
+
+#This allows me to view the compressed .gz file in a similar format as I would view an uncompressed file #using the 'less' command.
+
 #?# How much space do the compressed and uncompressed fastqs take? - 0.5
 
+#Retrieving storage space information:
+du input_iPSC_SRA66_subset_1.fastq.gz 
+#Output:
+163360	input_iPSC_SRA66_subset_1.fastq.gz
+
+#Retrieving storage space information:
+du /projects/bmeg/A1/input_iPSC_SRA66_subset_1.fastq
+#Output:
+845380	/projects/bmeg/A1/input_iPSC_SRA66_subset_1.fastq
+
+#The compressed file 1 takes up 163 360 bytes of storage.
+#The uncompressed file 1 takes up 845 380 bytes of storage.
 
 ```
 
@@ -158,12 +209,29 @@ Because this is a very large dataset we will subset it in order to make it more 
 #?# How many lines does the uncompressed fastq file have in total? - 0.25
 #Tip: loop at the *wc* command documentation
 
+cd
+cd /projects/bmeg/A1/
+wc -l input_iPSC_SRA66_subset_1.fastq
+
+#Output:
+10459640 input_iPSC_SRA66_subset_1.fastq
+
+#There are 10459640 lines in the uncompressed fastq file.
+
 
 #?# Select only the id lines (e.g. @SRR12506919.667552 667552 length=151) of the dataset (the ones that start with @ and are followed by the read id) - 0.75 pt
 ## Tip: look at the *grep* command
 
+grep ^@ input_iPSC_SRA66_subset_1.fastq
+
+#Output: All lines beginning with @ character
+
 #?# How many reads are in the file (i.e., how many id lines are in the file)? - 1 pt
 
+grep ^@ input_iPSC_SRA66_subset_1.fastq | wc -l
+#Output:
+2614910
+#There are 2614910 reads in the file.
 
 ```
 
@@ -175,6 +243,7 @@ Because this is a very large dataset we will subset it in order to make it more 
 
 #?# Create a file that contains only the reads id lines (the result of our previous exercise). - 0.5 pt
 
+grep ^@ input_iPSC_SRA66_subset_1.fastq > /home/lbrockley_bmeg23/assignment_1/input_iPSC_SRA66_subset_1_id.txt
 
 ```
 
@@ -188,10 +257,16 @@ There will be times where you will want to save a copy of a dataset or file befo
 #?# Create a copy of the reads ids file - 0.25 pt
 ## Tip: man cp 
 
+cp input_iPSC_SRA66ubset_1_id.txt input_iPSC_SRA66_subset_1_id_copy.txt
+
 #?# Change the name of the backup reads id file - 0.25 pt
 ## Tip: man mv
 
+mv input_iPSC_SRA66_subset_1_id_copy.txt input_iPSC_SRA66_subset_1_id_backup.txt
+
 #?# Delete the copy of the reads id file - 0.25 pt
+
+rm input_iPSC_SRA66_subset_1_id_backup.txt
 
 ```
 
@@ -206,17 +281,18 @@ Conda is a package and environment manager (*https://docs.conda.io/en/latest/*).
 
 ## 1. Move to your home directory 
 
+cd
+
 #?# 2. Use the wget command to get the following file: https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
 
+wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
 
 ## The file extension .sh pertains to a bash script, the script you just downloaded contains all the instructions needed to install Conda to your home directory
 #?# 3. Run the Anaconda3-2021.11-Linux-x86_64.sh bash script. IMPORTANT: say yes to all the steps when prompted! 
 
-
+bash Anaconda3-2021.11-Linux-x86_64.sh
 
 ## 4. To finalize the installation you need to log out your current session and log in back to the server
-
-
 
 ```
 
@@ -240,6 +316,7 @@ To install them, we will be making use of the conda environments. Conda allows y
 #?# Create a new conda environment: - 0.5 pt
 # Tip: Consult the previously provide links or consult the conda create help (conda create --help)
 
+conda create -n working_env
 
 ```
 
@@ -253,6 +330,9 @@ Now that the environment has been created, it's time to add the packages that we
 
 #?# Add htop, screen, fastQC, samtools, and bowtie2 to your conda environment: - 3 pt
 
+conda install -c conda-forge htop
+conda install -c conda-forge screen
+conda install -c bioconda bowtie2 fastqc
 
 
 ```
@@ -269,12 +349,26 @@ We will use fastQC to do a quick inspection of the data quality. Once it has run
 
 #?# Run fastQC on the fastq files: - 1pt
 
+#Outputs fastqc for both fastq files into the assignment_1 folder.
+#Note that I made a shortcut to the folder containing the fastq files called cur_project_dir
+  
+fastqc -o /home/lbrockley_bmeg23/assignment_1/  /home/lbrockley_bmeg23/cur_project_dir/input_iPSC_SRA66_subset_1.fastq /home/lbrockley_bmeg23/cur_project_dir/input_iPSC_SRA66_subset_2.fastq
+ 
+  
 ## In order to open the html files on your web browser you will need to download the files to your computer
 ## Ubuntu/Linux and Mac users: look at the *scp* command
 ## Windows users, this varies by what program you are using to connect (e.g. putty, winSCP, MobaXTerm). E.g. see: https://stackoverflow.com/questions/6217055/how-can-i-copy-a-file-from-a-remote-server-to-using-putty-in-windows
 
+scp lbrockley_bmeg23@orca1.bcgsc.ca:/home/lbrockley_bmeg23/assignment_1/input_iPSC_SRA66_subset_1_fastqc.html .
+ 
 #?# What can you say about the data quality? Are there any areas of concern? If so, what could explain what you are seeing? Does read 1 or read 2 have better sequencing quality? Is this expected? - 4 pt 
 # ---
+
+The data quality appears to be quite good in both fastqs.
+Both reports have given a green checkmark of approval to all sections of the summary except for "per sequence GC content", which has an orange warning in both reports, indicating that >15% of reads deviated from the expected normal distribution of GC content.
+Both samples have a higher GC content per sequence than predicted by a normal distribution (the peaks are higher and shifted to the right).
+The somewhat aberrant shapes of the peaks may be explained by contamination, and the slight shift to higher GC content may be explained by systematic bias in the study design.
+Based on the per sequence quality graph, read 1 has better sequencing quality. This is expected; read 2 quality is often lower than read 1 quality.
 
 ```
   
